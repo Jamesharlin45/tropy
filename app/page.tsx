@@ -1,23 +1,56 @@
-export default function Page() {
+"use client"
+
+import { useMemo, useState } from "react"
+import { TopNav } from "@/components/top-nav"
+import { SearchBar } from "@/components/search-bar"
+import { DateStrip } from "@/components/date-strip"
+import { TipsView } from "@/components/tips-view"
+import { PlansView } from "@/components/plans-view"
+import { HistoryView } from "@/components/history-view"
+import { SiteFooter } from "@/components/site-footer"
+import { dateWindow, todayStr } from "@/lib/dates"
+import type { TabId } from "@/lib/types"
+
+export default function TropyApp() {
+  const [tab, setTab] = useState<TabId>("free")
+  const [selectedDate, setSelectedDate] = useState<string>(() => todayStr())
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [query, setQuery] = useState("")
+
+  // A window of dates around today for the strip (-3 .. +10).
+  const dates = useMemo(() => dateWindow(todayStr(), 3, 10), [])
+
+  const showDateStrip = tab === "free" || tab === "vip"
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-[color:light-dark(#fff,#000)] text-[color:light-dark(#000,#fff)]">
-      <svg
-        aria-hidden="true"
-        className="size-20"
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p className="absolute left-1/2 top-[calc(50%+56px)] -translate-x-1/2 whitespace-nowrap text-sm font-medium text-muted-foreground">
-        Your v0 generation will show here.
-      </p>
-    </main>
+    <div className="min-h-screen">
+      <TopNav
+        active={tab}
+        onChange={setTab}
+        searchOpen={searchOpen}
+        onToggleSearch={() => setSearchOpen((s) => !s)}
+      />
+
+      {searchOpen && tab !== "plans" ? (
+        <SearchBar value={query} onChange={setQuery} />
+      ) : null}
+
+      {showDateStrip ? (
+        <DateStrip dates={dates} selected={selectedDate} onSelect={setSelectedDate} />
+      ) : null}
+
+      <main className="mx-auto max-w-4xl px-4 py-4">
+        {tab === "free" ? (
+          <TipsView date={selectedDate} tier="free" query={query} onUnlock={() => setTab("plans")} />
+        ) : null}
+        {tab === "vip" ? (
+          <TipsView date={selectedDate} tier="vip" query={query} onUnlock={() => setTab("plans")} />
+        ) : null}
+        {tab === "plans" ? <PlansView /> : null}
+        {tab === "history" ? <HistoryView query={query} /> : null}
+      </main>
+
+      <SiteFooter />
+    </div>
   )
 }

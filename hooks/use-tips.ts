@@ -42,6 +42,39 @@ export function useTips(date: string) {
   }
 }
 
+// History: gather resolved tips across a window of past days.
+async function historyFetcher(dates: string[]): Promise<MatchTip[]> {
+  const results = await Promise.all(
+    dates.map(async (date) => {
+      try {
+        return await tipsFetcher(date)
+      } catch {
+        return [] as MatchTip[]
+      }
+    }),
+  )
+  // newest first, only resolved outcomes
+  return results
+    .flat()
+    .filter((it) => it.status !== "pending" && it.tip)
+    .sort((a, b) => (b.match.kickoffUnix ?? 0) - (a.match.kickoffUnix ?? 0))
+}
+
+export function useHistory(dates: string[]) {
+  const key = dates.length ? ["history", dates.join(",")] : null
+  const { data, error, isLoading, mutate } = useSWR<MatchTip[]>(
+    key,
+    () => historyFetcher(dates),
+    { revalidateOnFocus: false, shouldRetryOnError: false },
+  )
+  return {
+    items: data ?? [],
+    error: error as Error | undefined,
+    isLoading,
+    retry: () => mutate(),
+  }
+}
+
 // Lightweight per-day count for the date strip badges.
 async function countFetcher(date: string): Promise<number> {
   const env = await fetchMatches(date)
