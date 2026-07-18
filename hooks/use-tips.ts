@@ -13,9 +13,15 @@ async function tipsFetcher(date: string): Promise<MatchTip[]> {
     matchesEnvelope = await fetchMatches(date)
   } catch (err) {
     // If the upstream API is down, throw a user-friendly error
-    const msg = err instanceof Error ? err.message : String(err)
-    if (msg.includes('Network error') || msg.includes('502') || msg.includes('upstream')) {
-      throw new Error('Data feed temporarily unavailable. Please try again in a moment.')
+    const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
+    if (
+      msg.includes("network") ||
+      msg.includes("502") ||
+      msg.includes("upstream") ||
+      msg.includes("failed") ||
+      msg.includes("refused")
+    ) {
+      throw new Error("Data feed temporarily unavailable. Please try again in a moment.")
     }
     throw err
   }
