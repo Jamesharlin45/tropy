@@ -25,14 +25,18 @@ export function VipLockedCard({
   const { match } = item
 
   return (
-    <article className="tp-fade-up relative overflow-hidden rounded-2xl border border-[var(--tp-border)] bg-[var(--tp-surface)] p-4 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.6)]">
-      {/* obscured team row */}
-      <div className="mb-4 flex items-center justify-between gap-2 opacity-30 blur-[2px]" aria-hidden="true">
-        <span className="text-sm font-semibold">{match.homeName}</span>
-        <span className="font-display text-xs font-bold tracking-widest text-[var(--tp-muted)]">
-          {t("card.vs")}
-        </span>
-        <span className="text-sm font-semibold">{match.awayName}</span>
+    <article className="tp-fade-up relative flex overflow-hidden rounded-2xl border border-[var(--tp-border)] bg-[var(--tp-surface)]/80 p-3 shadow-lg backdrop-blur-md transition-all hover:border-[var(--tp-accent)]/50">
+      
+      {/* Background obscured teams */}
+      <div className="absolute inset-0 flex flex-col justify-center px-4 opacity-15 blur-[3px]" aria-hidden="true">
+        <div className="flex items-center gap-2 mb-2">
+           <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           <span className="truncate text-sm font-bold">{match.homeName}</span>
+        </div>
+        <div className="flex items-center gap-2">
+           <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           <span className="truncate text-sm font-bold">{match.awayName}</span>
+        </div>
       </div>
 
       {/* particle texture */}
@@ -40,47 +44,50 @@ export function VipLockedCard({
         {PARTICLES.map((p, i) => (
           <span
             key={i}
-            className="tp-particle absolute size-1.5 rounded-full"
+            className="tp-particle absolute size-1 rounded-full"
             style={{
               top: p.top,
               left: p.left,
               animationDelay: p.delay,
               backgroundColor: "var(--tp-accent)",
-              opacity: 0.5,
+              opacity: 0.6,
             }}
           />
         ))}
       </div>
 
       {/* lock + CTA */}
-      <div className="relative flex flex-col items-center gap-3 py-4 text-center">
-        <div
-          className="tp-glow flex size-14 items-center justify-center rounded-full"
-          style={{
-            backgroundColor: "color-mix(in srgb, var(--tp-accent) 14%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--tp-accent) 45%, transparent)",
-          }}
-        >
-          <Lock className="size-6" style={{ color: "var(--tp-accent)" }} aria-hidden="true" />
+      <div className="relative z-10 flex w-full items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div
+            className="tp-glow flex size-10 items-center justify-center rounded-full shrink-0"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--tp-accent) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--tp-accent) 40%, transparent)",
+            }}
+          >
+            <Lock className="size-4" style={{ color: "var(--tp-accent)" }} aria-hidden="true" />
+          </div>
+          <div className="flex flex-col min-w-0 pr-2">
+            <p className="font-display text-xs font-bold text-[var(--tp-text)] truncate">
+              {t("vip.locked.title")}
+            </p>
+            <p className="mt-0.5 text-[10px] text-[var(--tp-muted)] truncate">
+              {t("vip.locked.subtitle")}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="font-display text-sm font-bold text-[var(--tp-text)]">
-            {t("vip.locked.title")}
-          </p>
-          <p className="mt-0.5 text-xs text-[var(--tp-muted)]">
-            {t("vip.locked.subtitle")}
-          </p>
-        </div>
+
         <button
           type="button"
           onClick={onUnlock}
-          className="tp-focus inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition-transform hover:scale-[1.03]"
+          className="tp-focus shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-transform hover:scale-[1.03]"
           style={{
             backgroundColor: "var(--tp-accent)",
             color: "var(--tp-on-accent)",
           }}
         >
-          <Sparkles className="size-4" aria-hidden="true" />
+          <Sparkles className="size-3" aria-hidden="true" />
           {t("vip.unlock")}
         </button>
       </div>

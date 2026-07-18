@@ -32,7 +32,11 @@ export function useTips(date: string) {
   const { data, error, isLoading, mutate } = useSWR<MatchTip[]>(
     date ? ["tips", date] : null,
     () => tipsFetcher(date),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    { 
+      revalidateOnFocus: true, 
+      shouldRetryOnError: false,
+      refreshInterval: 5 * 60 * 1000, // Refresh every 5 minutes in background
+    },
   )
   return {
     tips: data ?? [],
@@ -65,7 +69,11 @@ export function useHistory(dates: string[]) {
   const { data, error, isLoading, mutate } = useSWR<MatchTip[]>(
     key,
     () => historyFetcher(dates),
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    { 
+      revalidateOnFocus: true, 
+      shouldRetryOnError: false,
+      refreshInterval: 10 * 60 * 1000, // Refresh history every 10 mins
+    },
   )
   return {
     items: data ?? [],
