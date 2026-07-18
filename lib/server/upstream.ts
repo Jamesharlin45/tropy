@@ -31,7 +31,9 @@ export async function fetchUpstream(
           "Mozilla/5.0 (compatible; TropyGames/1.0; +https://tropy.games)",
       },
       signal: controller.signal,
-      cache: "no-store",
+      // Automatically cache upstream responses for 6 hours (21600 seconds)
+      // This bypasses the need for manual file-based caching which fails on Vercel's read-only FS.
+      next: { revalidate: 21600 },
     })
 
     const text = await res.text()

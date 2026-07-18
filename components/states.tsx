@@ -39,7 +39,7 @@ export function EmptyState({ noResults = false }: { noResults?: boolean }) {
 
 export function ErrorState({ message, onRetry }: { message?: string; onRetry: () => void }) {
   const { t } = useApp()
-  const isOffline = message?.toLowerCase().includes('unavailable') || message?.toLowerCase().includes('network') || message?.toLowerCase().includes('502')
+  const isOffline = message?.toLowerCase().includes('unavailable') || message?.toLowerCase().includes('network') || message?.toLowerCase().includes('502') || message?.toLowerCase().includes('upstream') || message?.toLowerCase().includes('failed') || message?.toLowerCase().includes('timeout')
   return (
     <div
       role="alert"

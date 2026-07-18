@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import { fetchUpstream } from "@/lib/server/upstream"
 import { DEFAULT_TZ } from "@/lib/config"
-import fs from "fs"
-import path from "path"
 
 export const dynamic = "force-dynamic"
 
@@ -23,25 +21,7 @@ export async function GET(request: Request) {
     )
   }
 
-  // 1. Try to serve from local static cache if it exists (for speed and stability)
-  try {
-    const cachePath = path.join(process.cwd(), "public", "data", `cache-${date}.json`)
-    if (fs.existsSync(cachePath)) {
-      const cachedData = fs.readFileSync(cachePath, "utf-8")
-      const parsed = JSON.parse(cachedData)
-      
-      // If matchIds is specified, we can optionally filter the cached matches/stats to only return those requested.
-      // However, returning the whole pre-cached day's file is usually perfectly fine and faster.
-      if (parsed && parsed.success) {
-        console.log(`Serving cached matches with stats for date: ${date}`)
-        return NextResponse.json(parsed)
-      }
-    }
-  } catch (err) {
-    console.error("Cache read error:", err)
-  }
-
-  // 2. Fall back to upstream fetch
+  // 1. Fetch from upstream (automatically cached by Next.js edge cache)
   const result = await fetchUpstream("/matches-with-stats", {
     date,
     match_ids: matchIds,

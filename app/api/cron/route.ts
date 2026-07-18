@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import { fetchUpstream } from "@/lib/server/upstream"
 import { isTopLeague } from "@/lib/leagues"
-import fs from "fs"
-import path from "path"
 
 // This route is called by Vercel Cron every 6 hours.
 // It pre-fetches, filters, and caches today's top-league matches.
@@ -51,7 +49,7 @@ export async function GET(request: Request) {
 
   for (const date of [today, tomorrow]) {
     try {
-      // 1. Fetch all matches for this date
+      // 1. Fetch all matches for this date (this primes the Next.js Data Cache via fetchUpstream)
       const matchesResult = await fetchUpstream("/matches", { date, tz: "WAT" })
       if (!matchesResult.ok || !matchesResult.body) {
         results[date] = { matches: 0, cached: false, error: "Failed to fetch matches" }
@@ -60,7 +58,7 @@ export async function GET(request: Request) {
 
       const flatMatches = flattenMatches(matchesResult.body)
       if (flatMatches.length === 0) {
-        results[date] = { matches: 0, cached: false, error: "No top-league matches found" }
+        results[date] = { matches: 0, cached: true, error: "No top-league matches found" }
         continue
       }
 
@@ -74,29 +72,22 @@ export async function GET(request: Request) {
         .filter(Boolean)
         .join(",")
 
-      // 3. Fetch matches-with-stats for those IDs
-      const statsResult = await fetchUpstream("/matches-with-stats", {
-        date,
-        match_ids: matchIds,
-        tz: "WAT",
-      })
+      // 3. Fetch matches-with-stats for those IDs (primes the Next.js Data Cache)
+      if (matchIds.length > 0) {
+        await fetchUpstream("/matches-with-stats", {
+          date,
+          match_ids: matchIds,
+          tz: "WAT",
+        })
+      }
 
-      const payload = statsResult.ok ? statsResult.body : { success: true, data: flatMatches }
-
-      // 4. Write cache file
-      const cacheDir = path.join(process.cwd(), "public", "data")
-      fs.mkdirSync(cacheDir, { recursive: true })
-      fs.writeFileSync(
-        path.join(cacheDir, `cache-${date}.json`),
-        JSON.stringify(payload, null, 0), // compact JSON for smaller file
-        "utf-8",
-      )
-
+      // We do NOT write to fs (since Vercel is read-only). The `next: { revalidate }`
+      // cache in fetchUpstream automatically caches the responses globally.
       results[date] = { matches: flatMatches.length, cached: true }
     } catch (err) {
       results[date] = { matches: 0, cached: false, error: String(err) }
     }
   }
 
-  return NextResponse.json({ ok: true, date: today, results })
+  return NextResponse.json({ ok: true, primed: true, results })
 }
