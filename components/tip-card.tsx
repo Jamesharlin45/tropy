@@ -42,7 +42,7 @@ export function TipCard({ item }: { item: MatchTip }) {
              <span className="truncate text-sm font-bold text-[var(--tp-text)]">
                {match.homeName}
                {stats?.scoredAvgHome && stats.scoredAvgHome > 2.0 ? <span className="ml-1" title="High scoring team">🔥</span> : null}
-               {stats?.concededAvgHome !== null && stats.concededAvgHome < 0.8 ? <span className="ml-1" title="Solid defense">🛡️</span> : null}
+               {stats && stats.concededAvgHome !== null && stats.concededAvgHome < 0.8 ? <span className="ml-1" title="Solid defense">🛡️</span> : null}
              </span>
            </div>
            <div className="flex items-center gap-2">
@@ -54,7 +54,7 @@ export function TipCard({ item }: { item: MatchTip }) {
              <span className="truncate text-sm font-bold text-[var(--tp-text)]">
                {match.awayName}
                {stats?.scoredAvgAway && stats.scoredAvgAway > 2.0 ? <span className="ml-1" title="High scoring team">🔥</span> : null}
-               {stats?.concededAvgAway !== null && stats.concededAvgAway < 0.8 ? <span className="ml-1" title="Solid defense">🛡️</span> : null}
+               {stats && stats.concededAvgAway !== null && stats.concededAvgAway < 0.8 ? <span className="ml-1" title="Solid defense">🛡️</span> : null}
              </span>
            </div>
         </div>

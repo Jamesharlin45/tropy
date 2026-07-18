@@ -21,7 +21,7 @@ export function TipsView({
   query: string
   onUnlock: () => void
 }) {
-  const { hasAccess } = useApp() // Assuming hasAccess tells us if user is VIP unlocked
+  useApp()
   const { tips, error, isLoading, retry } = useTips(date)
   
   const [selectedLeague, setSelectedLeague] = useState<string>("All")
