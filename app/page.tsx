@@ -7,6 +7,7 @@ import { DateStrip } from "@/components/date-strip"
 import { TipsView } from "@/components/tips-view"
 import { PlansView } from "@/components/plans-view"
 import { HistoryView } from "@/components/history-view"
+import { AiView } from "@/components/ai-view"
 import { SiteFooter } from "@/components/site-footer"
 import { dateWindow, todayStr } from "@/lib/dates"
 import type { TabId } from "@/lib/types"
@@ -48,6 +49,7 @@ export default function TropyApp() {
         ) : null}
         {tab === "plans" ? <PlansView /> : null}
         {tab === "history" ? <HistoryView query={query} /> : null}
+        {tab === "ai" ? <AiView /> : null}
       </main>
 
       <SiteFooter />

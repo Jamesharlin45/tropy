@@ -1,6 +1,6 @@
 "use client"
 
-import { Flame, Crown, Diamond, History as HistoryIcon, Search } from "lucide-react"
+import { Flame, Crown, Diamond, History as HistoryIcon, Search, Bot } from "lucide-react"
 import { useApp } from "./app-provider"
 import { ThemePicker } from "./theme-picker"
 import { LanguagePicker } from "./language-picker"
@@ -11,6 +11,7 @@ const TABS: { id: TabId; icon: typeof Flame; key: string }[] = [
   { id: "vip", icon: Crown, key: "nav.vip" },
   { id: "plans", icon: Diamond, key: "nav.plans" },
   { id: "history", icon: HistoryIcon, key: "nav.history" },
+  { id: "ai", icon: Bot, key: "nav.ai" },
 ]
 
 export function TopNav({

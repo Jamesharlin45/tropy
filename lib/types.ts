@@ -3,7 +3,7 @@
 
 export type TipStatus = "pending" | "won" | "lost" | "void"
 
-export type TabId = "free" | "vip" | "plans" | "history"
+export type TabId = "free" | "vip" | "plans" | "history" | "ai"
 
 export interface NormalizedMatch {
   id: string
