@@ -30,11 +30,19 @@ export function VipLockedCard({
       {/* Background obscured teams */}
       <div className="absolute inset-0 flex flex-col justify-center px-4 opacity-15 blur-[3px]" aria-hidden="true">
         <div className="flex items-center gap-2 mb-2">
-           <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           {match.homeLogo ? (
+             <img src={match.homeLogo} alt="" className="size-4 object-contain shrink-0" />
+           ) : (
+             <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           )}
            <span className="truncate text-sm font-bold">{match.homeName}</span>
         </div>
         <div className="flex items-center gap-2">
-           <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           {match.awayLogo ? (
+             <img src={match.awayLogo} alt="" className="size-4 object-contain shrink-0" />
+           ) : (
+             <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
+           )}
            <span className="truncate text-sm font-bold">{match.awayName}</span>
         </div>
       </div>

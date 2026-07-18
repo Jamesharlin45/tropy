@@ -8,8 +8,11 @@ export type TabId = "free" | "vip" | "plans" | "history" | "ai"
 export interface NormalizedMatch {
   id: string
   homeName: string
+  homeLogo?: string
   awayName: string
+  awayLogo?: string
   competition: string
+  competitionLogo?: string
   kickoffUnix: number | null
   kickoffLabel: string // HH:mm (best effort) or ""
   dateStr: string // YYYY-MM-DD

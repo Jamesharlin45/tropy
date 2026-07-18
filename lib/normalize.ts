@@ -99,6 +99,11 @@ export function normalizeMatch(raw: unknown, dateStr: string, index = 0): Normal
   const homeName = readTeam(pick(raw, HOME_KEYS), ["home_name"]) 
   const awayName = readTeam(pick(raw, AWAY_KEYS), ["away_name"])
   const competition = readTeam(pick(raw, COMP_KEYS), ["name"]) ?? ""
+  
+  const homeLogo = toStr(pick(raw, ["home_image", "homeLogo", "home_logo", "team_a_logo", "home_badge"]))
+  const awayLogo = toStr(pick(raw, ["away_image", "awayLogo", "away_logo", "team_b_logo", "away_badge"]))
+  const competitionLogo = toStr(pick(raw, ["competition_image", "league_logo", "competition_logo"]))
+
   const kickoffUnix = toNum(pick(raw, KICKOFF_KEYS))
   const timeStr = toStr(pick(raw, TIME_KEYS))
   const kickoffLabel = timeStr ?? formatTimeFromUnix(kickoffUnix)
@@ -108,8 +113,11 @@ export function normalizeMatch(raw: unknown, dateStr: string, index = 0): Normal
   return {
     id,
     homeName: homeName ?? "Home",
+    homeLogo,
     awayName: awayName ?? "Away",
+    awayLogo,
     competition,
+    competitionLogo,
     kickoffUnix,
     kickoffLabel,
     dateStr,

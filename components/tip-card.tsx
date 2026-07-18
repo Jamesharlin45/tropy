@@ -17,7 +17,11 @@ export function TipCard({ item }: { item: MatchTip }) {
       {/* Top row: Comp & Date / Status */}
       <div className="mb-2 flex items-center justify-between gap-2 border-b border-[var(--tp-border)]/50 pb-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Calendar className="size-3 text-[var(--tp-muted)] shrink-0" aria-hidden="true" />
+          {match.competitionLogo ? (
+            <img src={match.competitionLogo} alt="" className="size-3 object-contain shrink-0" />
+          ) : (
+            <Calendar className="size-3 text-[var(--tp-muted)] shrink-0" aria-hidden="true" />
+          )}
           <span className="truncate text-[10px] font-semibold tracking-wider text-[var(--tp-muted)] uppercase">
             {match.competition || "Competition"} • {match.dateStr}
           </span>
@@ -30,11 +34,19 @@ export function TipCard({ item }: { item: MatchTip }) {
         {/* Teams (Left) */}
         <div className="flex flex-1 flex-col justify-center min-w-0 pr-2">
            <div className="flex items-center gap-2 mb-1.5">
-             <div className="size-1.5 rounded-full bg-[var(--tp-text)]/30 shrink-0" />
+             {match.homeLogo ? (
+                <img src={match.homeLogo} alt="" className="size-4 object-contain shrink-0" />
+             ) : (
+                <div className="size-1.5 rounded-full bg-[var(--tp-text)]/30 shrink-0" />
+             )}
              <span className="truncate text-sm font-bold text-[var(--tp-text)]">{match.homeName}</span>
            </div>
            <div className="flex items-center gap-2">
-             <div className="size-1.5 rounded-full bg-[var(--tp-text)]/30 shrink-0" />
+             {match.awayLogo ? (
+                <img src={match.awayLogo} alt="" className="size-4 object-contain shrink-0" />
+             ) : (
+                <div className="size-1.5 rounded-full bg-[var(--tp-text)]/30 shrink-0" />
+             )}
              <span className="truncate text-sm font-bold text-[var(--tp-text)]">{match.awayName}</span>
            </div>
         </div>
