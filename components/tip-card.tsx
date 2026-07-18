@@ -84,8 +84,15 @@ export function TipCard({ item }: { item: MatchTip }) {
         ) : null}
       </div>
 
-      {(!stats || stats.isRaw) && (match.isRaw || (stats && stats.isRaw)) ? (
-        <RawData data={stats?.raw ?? match.raw} />
+      {stats?.raw || match.raw ? (
+        <details className="mt-2 group">
+          <summary className="cursor-pointer text-[10px] font-bold text-[var(--tp-accent)] uppercase tracking-wider select-none hover:opacity-80 transition-opacity">
+            Deep Analysis ▾
+          </summary>
+          <div className="mt-2 pt-2 border-t border-[var(--tp-border)]/30">
+            <RawData data={stats?.raw ?? match.raw} />
+          </div>
+        </details>
       ) : null}
     </article>
   )

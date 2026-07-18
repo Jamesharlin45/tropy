@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react"
 
 export function AiView() {
   const { t } = useApp()
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
     api: '/api/chat'
   })
   
@@ -17,6 +17,12 @@ export function AiView() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  const quickPrompts = [
+    { label: "2 Odds", prompt: "Generate a solid 2 odds accumulator from today's matches." },
+    { label: "5 Odds", prompt: "Generate a 5 odds accumulator from today's matches." },
+    { label: "VIP Tips", prompt: "Show me the highest confidence VIP tips for today.", highlight: true }
+  ]
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-180px)] max-w-4xl flex-col p-4 md:h-[calc(100vh-140px)]">
@@ -68,8 +74,26 @@ export function AiView() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-[var(--tp-border)] bg-[var(--tp-surface-2)]/50 p-3">
-          <div className="flex gap-2 relative">
+        <div className="border-t border-[var(--tp-border)] bg-[var(--tp-surface-2)]/50 p-3 flex flex-col gap-3">
+          {messages.length === 0 && (
+            <div className="flex flex-wrap gap-2 justify-center">
+              {quickPrompts.map((qp, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => append({ role: 'user', content: qp.prompt })}
+                  className={`tp-focus text-[10px] uppercase font-bold px-3 py-1.5 rounded-full border transition-transform hover:scale-[1.03] active:scale-[0.97] ${
+                    qp.highlight 
+                      ? 'bg-[var(--tp-accent)]/10 text-[var(--tp-accent)] border-[var(--tp-accent)]/30 hover:bg-[var(--tp-accent)]/20' 
+                      : 'bg-[var(--tp-surface)] text-[var(--tp-text)] border-[var(--tp-border)] hover:bg-[var(--tp-bg-2)]'
+                  }`}
+                >
+                  {qp.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="flex gap-2 relative">
             <input
               value={input}
               onChange={handleInputChange}
@@ -83,8 +107,8 @@ export function AiView() {
             >
               <Send className="size-4" />
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

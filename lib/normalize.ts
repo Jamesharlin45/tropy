@@ -48,8 +48,8 @@ function toPct(v: unknown): number | null {
 // Matches
 // ---------------------------------------------------------------------------
 
-const HOME_KEYS = ["home_name", "homeName", "home_team", "homeTeam", "home", "team_home", "localteam"]
-const AWAY_KEYS = ["away_name", "awayName", "away_team", "awayTeam", "away", "team_away", "visitorteam"]
+const HOME_KEYS = ["home_name", "homeName", "home_team", "homeTeam", "home_team_name", "team_a_name", "home", "team_home", "localteam"]
+const AWAY_KEYS = ["away_name", "awayName", "away_team", "awayTeam", "away_team_name", "team_b_name", "away", "team_away", "visitorteam"]
 const COMP_KEYS = ["competition_name", "competition", "league_name", "league", "division", "comp", "tournament"]
 const ID_KEYS = ["id", "match_id", "matchId", "fixture_id", "fixtureId", "game_id"]
 const KICKOFF_KEYS = ["date_unix", "kickoff_unix", "kickoffUnix", "unix_timestamp", "timestamp", "starting_at_timestamp"]

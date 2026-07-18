@@ -15,9 +15,10 @@ function hashId(id: string): number {
   return Math.abs(h)
 }
 
-function tierFor(id: string): TipTier {
-  // ~45% free, ~55% VIP — deterministic and stable per fixture.
-  return hashId(id) % 20 < 9 ? "free" : "vip"
+function tierFor(tip: Tip | null): TipTier {
+  // Predictions with high confidence (≥ 75%) are VIP.
+  if (tip && tip.confidence >= 75) return "vip"
+  return "free"
 }
 
 /**
@@ -51,7 +52,7 @@ export function buildTips(
       stats,
       tip,
       status,
-      tier: tierFor(match.id),
+      tier: tierFor(tip),
     }
   })
 }
