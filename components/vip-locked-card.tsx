@@ -35,7 +35,11 @@ export function VipLockedCard({
            ) : (
              <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
            )}
-           <span className="truncate text-sm font-bold">{match.homeName}</span>
+           <span className="truncate text-sm font-bold">
+             {match.homeName}
+             {item.stats?.scoredAvgHome && item.stats.scoredAvgHome > 2.0 ? <span className="ml-1">🔥</span> : null}
+             {item.stats?.concededAvgHome !== null && item.stats.concededAvgHome < 0.8 ? <span className="ml-1">🛡️</span> : null}
+           </span>
         </div>
         <div className="flex items-center gap-2">
            {match.awayLogo ? (
@@ -43,7 +47,11 @@ export function VipLockedCard({
            ) : (
              <div className="size-1.5 rounded-full bg-[var(--tp-text)] shrink-0" />
            )}
-           <span className="truncate text-sm font-bold">{match.awayName}</span>
+           <span className="truncate text-sm font-bold">
+             {match.awayName}
+             {item.stats?.scoredAvgAway && item.stats.scoredAvgAway > 2.0 ? <span className="ml-1">🔥</span> : null}
+             {item.stats?.concededAvgAway !== null && item.stats.concededAvgAway < 0.8 ? <span className="ml-1">🛡️</span> : null}
+           </span>
         </div>
       </div>
 
