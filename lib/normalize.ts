@@ -176,8 +176,8 @@ export function normalizeMatchList(payload: unknown, dateStr: string): Normalize
 // Stats
 // ---------------------------------------------------------------------------
 
-const SCORED_HOME = ["seasonScoredAVG_home", "scoredAVG_home", "scored_avg_home", "avg_goals_scored_home", "home_scored_avg"]
-const SCORED_AWAY = ["seasonScoredAVG_away", "scoredAVG_away", "scored_avg_away", "avg_goals_scored_away", "away_scored_avg"]
+const SCORED_HOME = ["seasonScoredAVG_home", "scoredAVG_home", "scored_avg_home", "avg_goals_scored_home", "home_scored_avg", "home_ppg", "pre_match_home_ppg", "team_a_last5_ppg_overall", "team_a_default_ppg"]
+const SCORED_AWAY = ["seasonScoredAVG_away", "scoredAVG_away", "scored_avg_away", "avg_goals_scored_away", "away_scored_avg", "away_ppg", "pre_match_away_ppg", "team_b_last5_ppg_overall", "team_b_default_ppg"]
 const CONCEDED_HOME = ["seasonConcededAVG_home", "concededAVG_home", "conceded_avg_home", "avg_goals_conceded_home", "home_conceded_avg"]
 const CONCEDED_AWAY = ["seasonConcededAVG_away", "concededAVG_away", "conceded_avg_away", "avg_goals_conceded_away", "away_conceded_avg"]
 const BTTS_KEYS = ["btts_potential", "bttsPotential", "btts", "btts_percentage", "gg_potential"]

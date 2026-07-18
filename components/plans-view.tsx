@@ -99,6 +99,13 @@ export function PlansView() {
 
             <button
               type="button"
+              onClick={() => {
+                if (typeof window !== "undefined" && (window as Record<string, unknown>).AndroidBridge) {
+                  ((window as Record<string, unknown>).AndroidBridge as { subscribe?: (plan: string) => void }).subscribe?.(plan.nameKey)
+                } else {
+                  alert("Redirecting to Google Play Store Subscription...")
+                }
+              }}
               className={`tp-focus mt-6 rounded-xl px-4 py-3 font-display text-sm font-bold uppercase tracking-wide transition-colors ${
                 plan.popular
                   ? "bg-[var(--tp-accent)] text-[var(--tp-on-accent)] hover:bg-[var(--tp-accent-2)]"
@@ -109,6 +116,13 @@ export function PlansView() {
             </button>
           </article>
         ))}
+      </div>
+
+      <div className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-[var(--tp-border)] bg-[var(--tp-surface)]/60 p-4 text-center text-xs text-[var(--tp-muted)]">
+        <svg className="size-5 shrink-0 text-[#01875f]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.609 1.814L13.792 12 3.61 22.186a2.373 2.373 0 0 1-.61-1.636V3.45c0-.626.223-1.205.609-1.636zM15.206 13.414l2.457 2.457-11.83 6.758 9.373-9.215zm0-2.828L5.833 1.371l11.83 6.758-2.457 2.457zm2.172 1.414l3.586-2.049a1.5 1.5 0 0 0 0-2.502l-3.586-2.049-2.228 2.228 2.228 2.372z"/>
+        </svg>
+        <span>Subscriptions are billed securely through your <strong>Google Play Store</strong> account.</span>
       </div>
     </section>
   )

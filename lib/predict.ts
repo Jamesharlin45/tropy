@@ -14,32 +14,19 @@ function oddsFromProb(p: number): number {
 }
 
 export function generateTip(stats: NormalizedStats | null): Tip | null {
-  if (!stats || stats.isRaw) return null
+  if (!stats) return null
 
-  const {
-    scoredAvgHome,
-    scoredAvgAway,
-    concededAvgHome,
-    concededAvgAway,
-    bttsPotential,
-    over25Potential,
-    h2hHomeWins,
-    h2hAwayWins,
-    h2hDraws,
-  } = stats
+  const rawObj = (stats.raw && typeof stats.raw === "object" ? stats.raw : {}) as Record<string, unknown>
 
-  // Expected goals for each side using scored vs opponent conceded.
-  const homeXg =
-    scoredAvgHome !== null && concededAvgAway !== null
-      ? (scoredAvgHome + concededAvgAway) / 2
-      : scoredAvgHome
-  const awayXg =
-    scoredAvgAway !== null && concededAvgHome !== null
-      ? (scoredAvgAway + concededAvgHome) / 2
-      : scoredAvgAway
+  const over25Potential = stats.over25Potential ?? (typeof rawObj.o25_potential === "number" ? rawObj.o25_potential : null)
+  const bttsPotential = stats.bttsPotential ?? (typeof rawObj.btts_potential === "number" ? rawObj.btts_potential : null)
+  const homeXg = stats.scoredAvgHome ?? (typeof rawObj.home_ppg === "number" ? rawObj.home_ppg : null)
+  const awayXg = stats.scoredAvgAway ?? (typeof rawObj.away_ppg === "number" ? rawObj.away_ppg : null)
+  const h2hHomeWins = stats.h2hHomeWins
+  const h2hAwayWins = stats.h2hAwayWins
+  const h2hDraws = stats.h2hDraws
 
   const totalXg = (homeXg ?? 0) + (awayXg ?? 0)
-
   const candidates: Tip[] = []
 
   // Over/Under 2.5

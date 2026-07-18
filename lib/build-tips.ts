@@ -38,9 +38,11 @@ export function buildTips(
 
   return matches.map((match) => {
     let stats = statsMap[match.id] ?? null
-    // Fallback: some responses embed stats on the match itself.
-    if (!stats && match.raw && typeof match.raw === "object" && "stats" in (match.raw as object)) {
-      stats = normalizeStats(match.id, (match.raw as { stats: unknown }).stats)
+    // Fallback: FootyStats embeds stats/potentials directly on the match object.
+    if (!stats && match.raw && typeof match.raw === "object") {
+      const rawObj = match.raw as Record<string, unknown>
+      const srcStats = "stats" in rawObj && rawObj.stats ? rawObj.stats : rawObj
+      stats = normalizeStats(match.id, srcStats)
     }
     const tip = generateTip(stats)
     const status = resolveStatus(match, stats, tip, today)
