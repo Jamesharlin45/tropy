@@ -33,14 +33,17 @@ export function buildTips(
 ): MatchTip[] {
   const allMatches = normalizeMatchList(matchesEnvelope, date)
 
-  // Only keep matches from high-performing leagues with recognizable team names
-  const matches = allMatches.filter(
+  const validAll = allMatches.filter(
     (m) =>
       !(m.homeName === "Home" && m.awayName === "Away") &&
       m.homeName !== "Unknown" &&
-      m.awayName !== "Unknown" &&
-      isTopLeague(m.competition),
+      m.awayName !== "Unknown",
   )
+
+  // Only keep top-league matches. Fall back to all valid matches if none qualify
+  // (this prevents blank screen on days with no big-league games).
+  const topLeagueMatches = validAll.filter((m) => isTopLeague(m.competition))
+  const matches = topLeagueMatches.length > 0 ? topLeagueMatches : validAll
 
   // stats can come from /matches-with-stats `stats` map, keyed by id.
   const statsMap = statsEnvelope?.stats ? normalizeStatsMap(statsEnvelope.stats) : {}

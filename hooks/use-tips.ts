@@ -8,7 +8,18 @@ import type { MatchTip } from "@/lib/types"
 
 // Fetches fixtures + stats for a date and returns fully-built tips.
 async function tipsFetcher(date: string): Promise<MatchTip[]> {
-  const matchesEnvelope = await fetchMatches(date)
+  let matchesEnvelope
+  try {
+    matchesEnvelope = await fetchMatches(date)
+  } catch (err) {
+    // If the upstream API is down, throw a user-friendly error
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('Network error') || msg.includes('502') || msg.includes('upstream')) {
+      throw new Error('Data feed temporarily unavailable. Please try again in a moment.')
+    }
+    throw err
+  }
+
   // Pass the FULL envelope — normalizeMatchList knows how to unwrap nested data.data
   const matches = normalizeMatchList(matchesEnvelope, date)
   
@@ -38,17 +49,19 @@ export function useTips(date: string) {
     date ? ["tips", date] : null,
     () => tipsFetcher(date),
     { 
-      revalidateOnFocus: false,        // Don't refetch just by switching tabs
-      shouldRetryOnError: false,
-      keepPreviousData: true,          // Show stale data while loading fresh — prevents blank flicker
-      refreshInterval: 6 * 60 * 1000, // Background refresh every 6 minutes
-      dedupingInterval: 60 * 1000,     // Don't duplicate fetches within 1 minute
+      revalidateOnFocus: false,
+      shouldRetryOnError: true,      // Auto-retry when API comes back up
+      errorRetryCount: 3,            // Try up to 3 times
+      errorRetryInterval: 15000,     // Wait 15s between retries
+      keepPreviousData: true,
+      refreshInterval: 6 * 60 * 1000,
+      dedupingInterval: 60 * 1000,
     },
   )
   return {
     tips: data ?? [],
     error: error as Error | undefined,
-    isLoading: isLoading && !data,     // Only show loading spinner when there is NO cached data
+    isLoading: isLoading && !data,
     retry: () => mutate(),
   }
 }

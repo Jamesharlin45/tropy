@@ -39,25 +39,31 @@ export function EmptyState({ noResults = false }: { noResults?: boolean }) {
 
 export function ErrorState({ message, onRetry }: { message?: string; onRetry: () => void }) {
   const { t } = useApp()
+  const isOffline = message?.toLowerCase().includes('unavailable') || message?.toLowerCase().includes('network') || message?.toLowerCase().includes('502')
   return (
     <div
       role="alert"
-      className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[var(--tp-lost)]/40 bg-[var(--tp-lost)]/8 py-14 text-center"
+      className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--tp-border)] bg-[var(--tp-surface)]/40 py-14 text-center"
     >
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-[var(--tp-lost)]/15 text-[var(--tp-lost)]">
-        <AlertTriangle className="size-6" aria-hidden="true" />
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-[var(--tp-surface-2)] text-[var(--tp-muted)] text-2xl">
+        {isOffline ? "📡" : "⚠️"}
       </div>
-      <p className="font-display text-base font-bold text-[var(--tp-text)]">{t("error.title")}</p>
-      {message ? (
-        <p className="max-w-md px-4 font-mono text-xs text-[var(--tp-muted)] text-pretty">{message}</p>
-      ) : null}
+      <p className="font-display text-sm font-bold text-[var(--tp-text)]">
+        {isOffline ? "Data feed offline" : t("error.title")}
+      </p>
+      <p className="max-w-xs px-4 text-xs text-[var(--tp-muted)] text-pretty">
+        {isOffline
+          ? "The match data server is temporarily unreachable. Tips will auto-retry — or tap below."
+          : message}
+      </p>
       <button
         type="button"
         onClick={onRetry}
-        className="tp-focus rounded-xl bg-[var(--tp-accent)] px-4 py-2 font-display text-sm font-bold uppercase tracking-wide text-[var(--tp-on-accent)] transition-colors hover:bg-[var(--tp-accent-2)]"
+        className="tp-focus mt-1 rounded-xl bg-[var(--tp-accent)] px-4 py-2 font-display text-sm font-bold uppercase tracking-wide text-[var(--tp-on-accent)] transition-all hover:opacity-90 hover:scale-[1.02]"
       >
         {t("error.retry")}
       </button>
     </div>
   )
 }
+
