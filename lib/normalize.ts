@@ -128,16 +128,52 @@ export function normalizeMatch(raw: unknown, dateStr: string, index = 0): Normal
 
 /**
  * The /matches payload shape is not documented precisely. Handle:
+ *  - The real FootyStats shape: { success, data: { success, data: [ {title, name, matches: [...]} ] } }
  *  - array of matches
  *  - { data: [...] } / { matches: [...] } / { fixtures: [...] }
  *  - object keyed by id -> match
  *  - object keyed by competition -> array of matches
  */
+
+/** Check if a value looks like a league-group (has a `matches` or `fixtures` array). */
+function isLeagueGroup(v: unknown): v is Dict {
+  return isObj(v) && (Array.isArray((v as Dict).matches) || Array.isArray((v as Dict).fixtures))
+}
+
+/** Flatten an array of league groups into individual match objects, injecting competition name. */
+function flattenLeagueGroups(groups: unknown[], dateStr: string, out: NormalizedMatch[]) {
+  for (const group of groups) {
+    if (!isObj(group)) continue
+    const arr = (group.matches ?? group.fixtures) as unknown[]
+    if (!Array.isArray(arr)) continue
+    const compName = toStr(pick(group, ["name", "title", "competition_name", "competition", "league_name"])) ?? ""
+    const compLogo = toStr(pick(group, ["competition_image", "league_logo", "competition_logo", "iso"]))
+    arr.forEach((raw, i) => {
+      if (!isObj(raw)) return
+      // Inject competition info into the raw match if not already present
+      const enriched: Dict = { ...raw }
+      if (!enriched.competition_name && !enriched.competition && !enriched.league_name) {
+        enriched.competition_name = compName
+      }
+      if (!enriched.competition_image && !enriched.league_logo && compLogo) {
+        enriched.competition_image = compLogo
+      }
+      out.push(normalizeMatch(enriched, dateStr, out.length + i))
+    })
+  }
+}
+
 export function normalizeMatchList(payload: unknown, dateStr: string): NormalizedMatch[] {
-  const container =
-    isObj(payload) && ("data" in payload || "matches" in payload || "fixtures" in payload)
-      ? (payload as Dict).data ?? (payload as Dict).matches ?? (payload as Dict).fixtures
-      : payload
+  // Unwrap top-level envelope keys (success, data, matches, fixtures)
+  let container: unknown = payload
+  if (isObj(container)) {
+    container = (container as Dict).data ?? (container as Dict).matches ?? (container as Dict).fixtures ?? container
+  }
+  // Unwrap a second level if the API nests data.data (FootyStats wraps data twice)
+  if (isObj(container) && !Array.isArray(container)) {
+    const inner = (container as Dict).data ?? (container as Dict).matches ?? (container as Dict).fixtures
+    if (inner !== undefined) container = inner
+  }
 
   const out: NormalizedMatch[] = []
 
@@ -146,21 +182,20 @@ export function normalizeMatchList(payload: unknown, dateStr: string): Normalize
   }
 
   if (Array.isArray(container)) {
-    pushArray(container)
+    // If it's an array of league groups, flatten them
+    if (container.length > 0 && isLeagueGroup(container[0])) {
+      flattenLeagueGroups(container, dateStr, out)
+    } else {
+      pushArray(container)
+    }
   } else if (isObj(container)) {
     const values = Object.values(container)
     // Case A: object keyed by id -> match object
     if (values.every((v) => isObj(v) && !Array.isArray(v))) {
       // Could be id->match OR competition->matchObject; both handled as matches.
-      const looksLikeGroups = values.some(
-        (v) => isObj(v) && (Array.isArray((v as Dict).matches) || Array.isArray((v as Dict).fixtures)),
-      )
+      const looksLikeGroups = values.some(isLeagueGroup)
       if (looksLikeGroups) {
-        for (const group of values) {
-          const arr =
-            (isObj(group) && ((group as Dict).matches ?? (group as Dict).fixtures)) || []
-          if (Array.isArray(arr)) pushArray(arr)
-        }
+        flattenLeagueGroups(values, dateStr, out)
       } else {
         Object.entries(container as Dict).forEach(([key, v], i) => {
           const m = normalizeMatch(v, dateStr, i)

@@ -30,7 +30,7 @@ export function buildTips(
   matchesEnvelope: Envelope,
   statsEnvelope: Envelope | null,
 ): MatchTip[] {
-  const matches = normalizeMatchList(matchesEnvelope.data ?? matchesEnvelope.matches, date)
+  const matches = normalizeMatchList(matchesEnvelope, date)
 
   // stats can come from /matches-with-stats `stats` map, keyed by id.
   const statsMap = statsEnvelope?.stats ? normalizeStatsMap(statsEnvelope.stats) : {}

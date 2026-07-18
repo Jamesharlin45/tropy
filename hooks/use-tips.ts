@@ -9,11 +9,13 @@ import type { MatchTip } from "@/lib/types"
 // Fetches fixtures + stats for a date and returns fully-built tips.
 async function tipsFetcher(date: string): Promise<MatchTip[]> {
   const matchesEnvelope = await fetchMatches(date)
-  const matches = normalizeMatchList(
-    matchesEnvelope.data ?? matchesEnvelope.matches,
-    date,
-  )
-  const ids = matches.map((m) => m.id).filter((id) => !!id)
+  // Pass the FULL envelope — normalizeMatchList knows how to unwrap nested data.data
+  const matches = normalizeMatchList(matchesEnvelope, date)
+  
+  // Filter out matches where normalization couldn't find recognizable team names
+  const validMatches = matches.filter(m => !(m.homeName === 'Home' && m.awayName === 'Away'))
+  
+  const ids = validMatches.map((m) => m.id).filter((id) => !!id)
 
   let statsEnvelope = null
   if (ids.length) {
@@ -25,7 +27,10 @@ async function tipsFetcher(date: string): Promise<MatchTip[]> {
     }
   }
 
-  return buildTips(date, matchesEnvelope, statsEnvelope)
+  // Build tips but only for validMatches
+  const allTips = buildTips(date, matchesEnvelope, statsEnvelope)
+  // Only return tips that have real team names
+  return allTips.filter(t => !(t.match.homeName === 'Home' && t.match.awayName === 'Away'))
 }
 
 export function useTips(date: string) {
@@ -86,7 +91,7 @@ export function useHistory(dates: string[]) {
 // Lightweight per-day count for the date strip badges.
 async function countFetcher(date: string): Promise<number> {
   const env = await fetchMatches(date)
-  return normalizeMatchList(env.data ?? env.matches, date).length
+  return normalizeMatchList(env, date).filter(m => !(m.homeName === 'Home' && m.awayName === 'Away')).length
 }
 
 export function useDayCount(date: string, enabled: boolean) {
