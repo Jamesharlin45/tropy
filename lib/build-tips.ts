@@ -1,6 +1,7 @@
 import { normalizeMatchList, normalizeStats, normalizeStatsMap } from "./normalize"
 import { generateTip, resolveStatus } from "./predict"
 import { todayStr } from "./dates"
+import { isTopLeague, VIP_MIN_CONFIDENCE } from "./leagues"
 import type { Envelope } from "./api"
 import type { MatchTip, TipTier } from "./types"
 
@@ -15,9 +16,9 @@ function hashId(id: string): number {
   return Math.abs(h)
 }
 
-function tierFor(tip: Tip | null): TipTier {
-  // Predictions with high confidence (≥ 60%) are VIP.
-  if (tip && tip.confidence >= 60) return "vip"
+function tierFor(tip: { confidence: number } | null): TipTier {
+  // Predictions with high confidence (≥ VIP_MIN_CONFIDENCE%) are VIP.
+  if (tip && tip.confidence >= VIP_MIN_CONFIDENCE) return "vip"
   return "free"
 }
 
@@ -30,7 +31,16 @@ export function buildTips(
   matchesEnvelope: Envelope,
   statsEnvelope: Envelope | null,
 ): MatchTip[] {
-  const matches = normalizeMatchList(matchesEnvelope, date)
+  const allMatches = normalizeMatchList(matchesEnvelope, date)
+
+  // Only keep matches from high-performing leagues with recognizable team names
+  const matches = allMatches.filter(
+    (m) =>
+      !(m.homeName === "Home" && m.awayName === "Away") &&
+      m.homeName !== "Unknown" &&
+      m.awayName !== "Unknown" &&
+      isTopLeague(m.competition),
+  )
 
   // stats can come from /matches-with-stats `stats` map, keyed by id.
   const statsMap = statsEnvelope?.stats ? normalizeStatsMap(statsEnvelope.stats) : {}

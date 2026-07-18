@@ -100,9 +100,18 @@ export function normalizeMatch(raw: unknown, dateStr: string, index = 0): Normal
   const awayName = readTeam(pick(raw, AWAY_KEYS), ["away_name"])
   const competition = readTeam(pick(raw, COMP_KEYS), ["name"]) ?? ""
   
+  // Build team logo URLs from homeID/awayID via FootyStats CDN, or fall back to explicit image keys
+  const homeId = toStr(pick(raw, ["homeID", "home_id", "team_a_id"]))
+  const awayId = toStr(pick(raw, ["awayID", "away_id", "team_b_id"]))
   const homeLogo = toStr(pick(raw, ["home_image", "homeLogo", "home_logo", "team_a_logo", "home_badge"]))
+    ?? (homeId ? `https://cdn.footystats.org/img/teams/${homeId}.png` : undefined)
   const awayLogo = toStr(pick(raw, ["away_image", "awayLogo", "away_logo", "team_b_logo", "away_badge"]))
+    ?? (awayId ? `https://cdn.footystats.org/img/teams/${awayId}.png` : undefined)
+
+  // Competition logo: use explicit image key, or derive from competition_id
+  const compId = toStr(pick(raw, ["competition_id", "league_id", "season_id"]))
   const competitionLogo = toStr(pick(raw, ["competition_image", "league_logo", "competition_logo"]))
+    ?? (compId ? `https://cdn.footystats.org/img/competitions/${compId}.png` : undefined)
 
   const kickoffUnix = toNum(pick(raw, KICKOFF_KEYS))
   const timeStr = toStr(pick(raw, TIME_KEYS))
