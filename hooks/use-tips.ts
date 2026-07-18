@@ -38,15 +38,17 @@ export function useTips(date: string) {
     date ? ["tips", date] : null,
     () => tipsFetcher(date),
     { 
-      revalidateOnFocus: true, 
+      revalidateOnFocus: false,        // Don't refetch just by switching tabs
       shouldRetryOnError: false,
-      refreshInterval: 5 * 60 * 1000, // Refresh every 5 minutes in background
+      keepPreviousData: true,          // Show stale data while loading fresh — prevents blank flicker
+      refreshInterval: 6 * 60 * 1000, // Background refresh every 6 minutes
+      dedupingInterval: 60 * 1000,     // Don't duplicate fetches within 1 minute
     },
   )
   return {
     tips: data ?? [],
     error: error as Error | undefined,
-    isLoading,
+    isLoading: isLoading && !data,     // Only show loading spinner when there is NO cached data
     retry: () => mutate(),
   }
 }
@@ -75,15 +77,16 @@ export function useHistory(dates: string[]) {
     key,
     () => historyFetcher(dates),
     { 
-      revalidateOnFocus: true, 
+      revalidateOnFocus: false,
       shouldRetryOnError: false,
-      refreshInterval: 10 * 60 * 1000, // Refresh history every 10 mins
+      keepPreviousData: true,
+      refreshInterval: 10 * 60 * 1000,
     },
   )
   return {
     items: data ?? [],
     error: error as Error | undefined,
-    isLoading,
+    isLoading: isLoading && !data,
     retry: () => mutate(),
   }
 }
