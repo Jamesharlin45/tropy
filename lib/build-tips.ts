@@ -16,8 +16,8 @@ function hashId(id: string): number {
 }
 
 function tierFor(tip: Tip | null): TipTier {
-  // Predictions with high confidence (≥ 75%) are VIP.
-  if (tip && tip.confidence >= 75) return "vip"
+  // Predictions with high confidence (≥ 60%) are VIP.
+  if (tip && tip.confidence >= 60) return "vip"
   return "free"
 }
 

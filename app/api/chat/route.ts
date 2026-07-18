@@ -89,6 +89,35 @@ uncertainty.
   match.
 `
 
+function cleanMatch(raw: any) {
+  if (!raw || typeof raw !== 'object') return raw
+  const id = raw.id || raw.match_id || raw.matchId || raw.fixture_id || raw.game_id
+  const home = raw.home_name || raw.homeName || raw.home_team || raw.homeTeam || raw.home_team_name || raw.team_a_name || raw.home || raw.team_home || (raw.localteam && raw.localteam.name)
+  const away = raw.away_name || raw.awayName || raw.away_team || raw.awayTeam || raw.away_team_name || raw.team_b_name || raw.away || raw.team_away || (raw.visitorteam && raw.visitorteam.name)
+  const comp = raw.competition_name || raw.competition || raw.league_name || raw.league || raw.division || raw.comp || raw.tournament || (raw.league && raw.league.name)
+  const time = raw.time || raw.kickoff || raw.kickoff_time || raw.kickoffTime || raw.start_time || raw.starting_at || raw.date_unix || raw.kickoff_unix
+  return { id, home, away, competition: comp, kickoff: time }
+}
+
+function cleanStats(raw: any) {
+  if (!raw || typeof raw !== 'object') return raw
+  const data = raw.data || raw
+  if (data.error) return { error: data.error }
+  return {
+    scoredAvgHome: data.seasonScoredAVG_home || data.scoredAVG_home || data.scored_avg_home || data.home_scored_avg,
+    scoredAvgAway: data.seasonScoredAVG_away || data.scoredAVG_away || data.scored_avg_away || data.away_scored_avg,
+    concededAvgHome: data.seasonConcededAVG_home || data.concededAVG_home || data.conceded_avg_home || data.home_conceded_avg,
+    concededAvgAway: data.seasonConcededAVG_away || data.concededAVG_away || data.conceded_avg_away || data.away_conceded_away,
+    btts_potential: data.btts_potential || data.bttsPotential || data.btts_percentage || data.gg_potential,
+    o25_potential: data.o25_potential || data.over25_potential || data.o25Potential || data.over25 || data.o25,
+    h2h: data.h2h || data.head2head || data.headToHead || {
+      homeWins: data.team_a_wins || data.home_wins || data.w1,
+      awayWins: data.team_b_wins || data.away_wins || data.w2,
+      draws: data.draws || data.draw || data.x
+    }
+  }
+}
+
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
@@ -98,7 +127,7 @@ export async function POST(req: Request) {
     messages,
     tools: {
       get_matches: tool({
-        description: 'Get all matches scheduled for a given date.',
+        description: 'Get a limited, filtered list of matches scheduled for a given date to avoid token overflow.',
         parameters: z.object({
           date: z.string().optional().describe('YYYY-MM-DD, default today'),
           tz: z.string().optional().describe('Timezone, default WAT'),
@@ -109,8 +138,22 @@ export async function POST(req: Request) {
           if (date) url.searchParams.set('date', date)
           if (tz) url.searchParams.set('tz', tz)
           if (division) url.searchParams.set('division', division)
-          const res = await fetch(url.toString())
-          return await res.json()
+          try {
+            const res = await fetch(url.toString())
+            const body = await res.json()
+            if (!body || !body.success) return body
+            
+            // Get matches array
+            const rawMatches = body.data || body.matches || body.fixtures || []
+            // Clean and limit to top 20 matches
+            const cleanedMatches = Array.isArray(rawMatches) 
+              ? rawMatches.slice(0, 20).map(cleanMatch)
+              : Object.values(rawMatches).slice(0, 20).map(cleanMatch)
+              
+            return { success: true, matches: cleanedMatches }
+          } catch (err) {
+            return { success: false, error: String(err) }
+          }
         }
       }),
       get_match_stats: tool({
@@ -119,12 +162,18 @@ export async function POST(req: Request) {
           match_id: z.number().describe('The ID of the match')
         }),
         execute: async ({ match_id }) => {
-          const res = await fetch(`http://us3.bot-hosting.net:20562/match-stats?match_id=${match_id}`)
-          return await res.json()
+          try {
+            const res = await fetch(`http://us3.bot-hosting.net:20562/match-stats?match_id=${match_id}`)
+            const body = await res.json()
+            if (!body || !body.success) return body
+            return { success: true, stats: cleanStats(body.data || body) }
+          } catch (err) {
+            return { success: false, error: String(err) }
+          }
         }
       }),
       get_matches_with_stats: tool({
-        description: 'Get the daily match list AND H2H stats for multiple matches in a single parallel request.',
+        description: 'Get the daily match list AND H2H stats for multiple matches in a single parallel request (limited to 15 matches maximum).',
         parameters: z.object({
           date: z.string().optional().describe('YYYY-MM-DD, default today'),
           match_ids: z.string().optional().describe('Comma-separated list of match IDs'),
@@ -134,11 +183,39 @@ export async function POST(req: Request) {
         execute: async ({ date, match_ids, tz, division }) => {
           const url = new URL('http://us3.bot-hosting.net:20562/matches-with-stats')
           if (date) url.searchParams.set('date', date)
-          if (match_ids) url.searchParams.set('match_ids', match_ids)
           if (tz) url.searchParams.set('tz', tz)
           if (division) url.searchParams.set('division', division)
-          const res = await fetch(url.toString())
-          return await res.json()
+          
+          let limitedMatchIds = match_ids
+          if (match_ids) {
+            const ids = match_ids.split(',').slice(0, 15) // Limit to 15 match stats at once
+            limitedMatchIds = ids.join(',')
+            url.searchParams.set('match_ids', limitedMatchIds)
+          }
+          
+          try {
+            const res = await fetch(url.toString())
+            const body = await res.json()
+            if (!body || !body.success) return body
+            
+            // Clean matches list
+            const rawMatches = body.data || body.matches || body.fixtures || []
+            const cleanedMatches = Array.isArray(rawMatches)
+              ? rawMatches.slice(0, 15).map(cleanMatch)
+              : Object.values(rawMatches).slice(0, 15).map(cleanMatch)
+              
+            // Clean stats map
+            const cleanedStats: Record<string, any> = {}
+            if (body.stats && typeof body.stats === 'object') {
+              for (const [id, stat] of Object.entries(body.stats)) {
+                cleanedStats[id] = cleanStats(stat)
+              }
+            }
+            
+            return { success: true, matches: cleanedMatches, stats: cleanedStats }
+          } catch (err) {
+            return { success: false, error: String(err) }
+          }
         }
       })
     }
