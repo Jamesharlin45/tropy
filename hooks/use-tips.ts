@@ -1,64 +1,63 @@
 "use client"
 
 import useSWR from "swr"
-import { fetchMatches, fetchMatchesWithStats } from "@/lib/api"
-import { normalizeMatchList } from "@/lib/normalize"
-import { buildTips } from "@/lib/build-tips"
-import type { MatchTip } from "@/lib/types"
+import { fetchMatchesWithStats } from "@/lib/api"
+import { buildTipsFromNormalized } from "@/lib/build-tips"
+import type { MatchTip, NormalizedMatch, NormalizedStats } from "@/lib/types"
 
-// Fetches fixtures + stats for a date and returns fully-built tips.
+// ─── Fetcher ─────────────────────────────────────────────────────────────────
+// Calls /api/matches-with-stats (which now reads from Supabase).
+// Returns fully-built MatchTip[] ready for the UI.
 async function tipsFetcher(date: string): Promise<MatchTip[]> {
-  let matchesEnvelope
+  let envelope
   try {
-    matchesEnvelope = await fetchMatches(date)
+    // Pass empty match_ids — the DB route ignores them and returns all for the date
+    envelope = await fetchMatchesWithStats(date, [])
   } catch (err) {
-    // If the upstream API is down, throw a user-friendly error
     const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
     if (
       msg.includes("network") ||
       msg.includes("502") ||
       msg.includes("upstream") ||
       msg.includes("failed") ||
-      msg.includes("refused")
+      msg.includes("refused") ||
+      msg.includes("unavailable")
     ) {
       throw new Error("Data feed temporarily unavailable. Please try again in a moment.")
     }
     throw err
   }
 
-  // Pass the FULL envelope — normalizeMatchList knows how to unwrap nested data.data
-  const matches = normalizeMatchList(matchesEnvelope, date)
-  
-  // Filter out matches where normalization couldn't find recognizable team names
-  const validMatches = matches.filter(m => !(m.homeName === 'Home' && m.awayName === 'Away'))
-  
-  const ids = validMatches.map((m) => m.id).filter((id) => !!id)
+  // The DB route returns { success, data: NormalizedMatch[], stats: Record<string,NormalizedStats> }
+  // The upstream fallback returns the raw FootyStats envelope.
+  // We support both shapes here.
+  const env = envelope as Record<string, unknown>
 
-  let statsEnvelope = null
-  if (ids.length) {
-    try {
-      statsEnvelope = await fetchMatchesWithStats(date, ids)
-    } catch {
-      // Stats are optional — fixtures still render without tips.
-      statsEnvelope = null
-    }
+  let matches: NormalizedMatch[] = []
+  let statsMap: Record<string, NormalizedStats> = {}
+
+  if (env.source === "db" && Array.isArray(env.data)) {
+    // DB path — already normalized
+    matches = env.data as NormalizedMatch[]
+    statsMap = (env.stats ?? {}) as Record<string, NormalizedStats>
+  } else {
+    // Upstream fallback — use existing normalize logic via buildTipsFromNormalized
+    return buildTipsFromNormalized(date, envelope, null)
   }
 
-  // Build tips but only for validMatches
-  const allTips = buildTips(date, matchesEnvelope, statsEnvelope)
-  // Only return tips that have real team names
-  return allTips.filter(t => !(t.match.homeName === 'Home' && t.match.awayName === 'Away'))
+  // Build tips from normalized DB data
+  return buildTipsFromNormalized(date, null, null, matches, statsMap)
 }
 
 export function useTips(date: string) {
   const { data, error, isLoading, mutate } = useSWR<MatchTip[]>(
     date ? ["tips", date] : null,
     () => tipsFetcher(date),
-    { 
+    {
       revalidateOnFocus: false,
-      shouldRetryOnError: true,      // Auto-retry when API comes back up
-      errorRetryCount: 3,            // Try up to 3 times
-      errorRetryInterval: 15000,     // Wait 15s between retries
+      shouldRetryOnError: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 15000,
       keepPreviousData: true,
       refreshInterval: 6 * 60 * 1000,
       dedupingInterval: 60 * 1000,
@@ -72,7 +71,7 @@ export function useTips(date: string) {
   }
 }
 
-// History: gather resolved tips across a window of past days.
+// ─── History ──────────────────────────────────────────────────────────────────
 async function historyFetcher(dates: string[]): Promise<MatchTip[]> {
   const results = await Promise.all(
     dates.map(async (date) => {
@@ -83,7 +82,6 @@ async function historyFetcher(dates: string[]): Promise<MatchTip[]> {
       }
     }),
   )
-  // newest first, only resolved outcomes
   return results
     .flat()
     .filter((it) => it.status !== "pending" && it.tip)
@@ -95,7 +93,7 @@ export function useHistory(dates: string[]) {
   const { data, error, isLoading, mutate } = useSWR<MatchTip[]>(
     key,
     () => historyFetcher(dates),
-    { 
+    {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
       keepPreviousData: true,
@@ -110,10 +108,14 @@ export function useHistory(dates: string[]) {
   }
 }
 
-// Lightweight per-day count for the date strip badges.
+// ─── Day count (for date strip badges) ───────────────────────────────────────
 async function countFetcher(date: string): Promise<number> {
-  const env = await fetchMatches(date)
-  return normalizeMatchList(env, date).filter(m => !(m.homeName === 'Home' && m.awayName === 'Away')).length
+  try {
+    const tips = await tipsFetcher(date)
+    return tips.length
+  } catch {
+    return 0
+  }
 }
 
 export function useDayCount(date: string, enabled: boolean) {

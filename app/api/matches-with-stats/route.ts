@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { fetchUpstream } from "@/lib/server/upstream"
 import { DEFAULT_TZ } from "@/lib/config"
+import { getMatchesForDate, getStatsMap } from "@/lib/db/queries"
+import { fetchUpstream } from "@/lib/server/upstream"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/matches-with-stats?date=YYYY-MM-DD&match_ids=1,2,3&tz=WAT
-// Relays to upstream GET /matches-with-stats.
-// Individual stats entries can fail independently upstream; we pass the
-// envelope through untouched so the client can check each entry.
+// GET /api/matches-with-stats?date=YYYY-MM-DD&match_ids=1,2,3
+// Primary source: Supabase `matches` + `match_stats` tables joined.
+// Fallback: upstream /matches-with-stats endpoint.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const date = searchParams.get("date") ?? undefined
@@ -21,7 +21,22 @@ export async function GET(request: Request) {
     )
   }
 
-  // 1. Fetch from upstream (automatically cached by Next.js edge cache)
+  // ── 1. Try Supabase ────────────────────────────────────────────────────────
+  const [dbMatches, dbStats] = await Promise.all([
+    getMatchesForDate(date),
+    getStatsMap(date),
+  ])
+
+  if (dbMatches.length > 0) {
+    return NextResponse.json({
+      success: true,
+      data: dbMatches,
+      stats: dbStats,
+      source: "db",
+    })
+  }
+
+  // ── 2. Fallback: upstream ─────────────────────────────────────────────────
   const result = await fetchUpstream("/matches-with-stats", {
     date,
     match_ids: matchIds,
