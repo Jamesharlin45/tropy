@@ -24,6 +24,23 @@ async function fetchTipsFromNetwork(date: string): Promise<MatchTip[]> {
   return buildTipsFromNormalized(date, envelope, null)
 }
 
+// ─── Deduplication ────────────────────────────────────────────────────────────
+// Prevent duplicate inflight requests for the same date.
+const inflightRequests = new Map<string, Promise<MatchTip[]>>()
+
+function fetchTipsFromNetworkDeduplicated(date: string): Promise<MatchTip[]> {
+  if (inflightRequests.has(date)) {
+    return inflightRequests.get(date)!
+  }
+  
+  const promise = fetchTipsFromNetwork(date).finally(() => {
+    inflightRequests.delete(date)
+  })
+  
+  inflightRequests.set(date, promise)
+  return promise
+}
+
 // ─── useTips ─────────────────────────────────────────────────────────────────
 // Cache-first strategy:
 //   1. On mount → serve from localStorage immediately (zero loading flash)
@@ -75,7 +92,7 @@ export function useTips(date: string) {
       if (!hasCachedData) setIsLoading(true)
 
       try {
-        const fresh = await fetchTipsFromNetwork(date)
+        const fresh = await fetchTipsFromNetworkDeduplicated(date)
         if (cancelled || dateRef.current !== date) return
 
         if (fresh.length > 0) {
@@ -114,7 +131,7 @@ export function useTips(date: string) {
     setError(undefined)
     setIsLoading(true)
     try {
-      const fresh = await fetchTipsFromNetwork(date)
+      const fresh = await fetchTipsFromNetworkDeduplicated(date)
       if (fresh.length > 0) {
         setTips(fresh)
         writeCache(date, fresh)
@@ -157,7 +174,7 @@ export function useHistory(dates: string[]) {
 
       // Background fetch stale dates
       const staleDates = dates.filter((d) => isCacheStale(readCache(d)))
-      const results = await Promise.allSettled(staleDates.map((d) => fetchTipsFromNetwork(d)))
+      const results = await Promise.allSettled(staleDates.map((d) => fetchTipsFromNetworkDeduplicated(d)))
       if (cancelled) return
 
       results.forEach((r, i) => {

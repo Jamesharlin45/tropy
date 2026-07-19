@@ -69,7 +69,10 @@ export function buildTips(
   const topLeagueMatches = validAll.filter((m) => isTopLeague(m.competition))
   const matches = topLeagueMatches.length > 0 ? topLeagueMatches : validAll
 
-  const rawStats = (statsEnvelope as Record<string, unknown> | null)?.stats
+  // Extract stats either from the dedicated statsEnvelope or from the matches envelope
+  const rawStats = (statsEnvelope as Record<string, unknown> | null)?.stats 
+    ?? (matchesEnvelope as Record<string, unknown> | null)?.stats
+    
   const statsMap = rawStats ? normalizeStatsMap(rawStats) : {}
 
   return buildFromMatchesAndStats(matches, statsMap, todayStr())
