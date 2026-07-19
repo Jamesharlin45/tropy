@@ -50,6 +50,19 @@ export function AiView() {
                     {m.role === 'assistant' ? (
                       <Markdown 
                         className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-[var(--tp-surface)] prose-pre:border prose-pre:border-[var(--tp-border)]"
+                        components={{
+                          // Open all AI-generated links in a new tab to never navigate away from the app
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[var(--tp-accent)] underline underline-offset-2 hover:opacity-80"
+                            >
+                              {children}
+                            </a>
+                          ),
+                        }}
                       >
                         {m.content}
                       </Markdown>

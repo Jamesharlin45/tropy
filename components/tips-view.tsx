@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { RefreshCw } from "lucide-react"
 import { useApp } from "@/components/app-provider"
 import { useTips } from "@/hooks/use-tips"
 import { TipCard } from "@/components/tip-card"
@@ -22,7 +23,15 @@ export function TipsView({
   onUnlock: () => void
 }) {
   useApp()
-  const { tips, error, isLoading, retry } = useTips(date)
+  const { tips, error, isLoading, lastFetchedAt, retry } = useTips(date)
+  
+  // Format cache age as "X mins ago" or "X hours ago"
+  const cacheAge = lastFetchedAt ? (() => {
+    const mins = Math.floor((Date.now() - lastFetchedAt) / 60000)
+    if (mins < 1) return "just now"
+    if (mins < 60) return `${mins}m ago`
+    return `${Math.floor(mins / 60)}h ago`
+  })() : null
   
   const [selectedLeague, setSelectedLeague] = useState<string>("All")
 
@@ -79,7 +88,20 @@ export function TipsView({
 
   return (
     <section className="tp-fade-up">
-      <SectionHeader eyebrowKey={eyebrow} count={filtered.length} />
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <SectionHeader eyebrowKey={eyebrow} count={filtered.length} />
+        {cacheAge && (
+          <button
+            type="button"
+            onClick={retry}
+            title="Refresh matches"
+            className="flex items-center gap-1 text-[9px] text-[var(--tp-muted)] hover:text-[var(--tp-accent)] transition-colors"
+          >
+            <RefreshCw className="size-2.5" />
+            <span>{cacheAge}</span>
+          </button>
+        )}
+      </div>
 
       {/* League Filter */}
       {leagues.length > 2 && (
