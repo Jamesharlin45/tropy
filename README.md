@@ -24,6 +24,21 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Configuration
+
+### Environment Variables
+This application relies on an external proxy API for football statistics. Because the API uses unencrypted HTTP on a custom port (`http://us3.bot-hosting.net:20562`), we proxy all requests through Next.js serverless functions to avoid Mixed Content (HTTPS -> HTTP) and CORS errors on the frontend.
+
+You **MUST** configure the following environment variable in your Vercel project settings before deployment:
+
+- `FOOTYSTATS_PROXY_BASE_URL`: The base URL of the proxy API.
+  - Example: `http://us3.bot-hosting.net:20562`
+
+1. Go to your Vercel dashboard.
+2. Select your project and go to **Settings > Environment Variables**.
+3. Add `FOOTYSTATS_PROXY_BASE_URL` with the correct URL.
+4. Redeploy your application.
+
 ## Learn More
 
 To learn more, take a look at the following resources:

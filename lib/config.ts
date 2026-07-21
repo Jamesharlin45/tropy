@@ -4,7 +4,7 @@
 // This solves both mixed-content blocking (HTTPS page -> HTTP API) and CORS.
 
 export const UPSTREAM_BASE_URL =
-  process.env.TROPY_UPSTREAM_URL?.replace(/\/$/, "") ??
+  process.env.FOOTYSTATS_PROXY_BASE_URL?.replace(/\/$/, "") ??
   "http://us3.bot-hosting.net:20562"
 
 // Default timezone used across the app for fixture listings.
