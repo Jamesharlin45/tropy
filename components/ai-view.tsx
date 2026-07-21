@@ -116,7 +116,7 @@ export function AiView() {
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="absolute right-2 top-2 bottom-2 tp-focus flex items-center justify-center rounded-lg bg-[var(--tp-accent)] px-3 text-[var(--tp-on-accent)] disabled:opacity-50 transition-transform hover:scale-[1.03] active:scale-[0.97]"
+              className="absolute right-2 top-2 bottom-2 tp-focus flex items-center justify-center rounded-lg bg-[var(--tp-accent)] px-3 text-[var(--tp-on-accent)] disabled:opacity-50 transition-opacity"
             >
               <Send className="size-4" />
             </button>

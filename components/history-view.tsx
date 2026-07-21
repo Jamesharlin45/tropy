@@ -7,6 +7,7 @@ import { useHistory } from "@/hooks/use-tips"
 import { dateWindow, todayStr } from "@/lib/dates"
 import { TipCard } from "@/components/tip-card"
 import { SectionHeader } from "@/components/section-header"
+import { DataAnalysis } from "@/components/data-analysis"
 import { LoadingState, EmptyState, ErrorState } from "@/components/states"
 import type { MatchTip } from "@/lib/types"
 
@@ -38,7 +39,7 @@ export function HistoryView({ query }: { query: string }) {
   if (error) return <ErrorState message={error.message} onRetry={retry} />
 
   return (
-    <section className="tp-fade-up">
+    <section className="tp-fade-up space-y-8">
       {/* win-rate summary */}
       <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-[var(--tp-border)] bg-[var(--tp-surface)] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -56,17 +57,23 @@ export function HistoryView({ query }: { query: string }) {
         </div>
       </div>
 
-      <SectionHeader eyebrowKey="section.history.eyebrow" count={filtered.length} />
+      {/* Data Analysis Tables */}
+      <DataAnalysis items={filtered} loading={isLoading} />
 
-      {filtered.length === 0 ? (
-        <EmptyState noResults={!!query.trim() && items.length > 0} />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((item) => (
-            <TipCard key={`${item.match.id}-${item.match.dateStr}`} item={item} />
-          ))}
-        </div>
-      )}
+      {/* Card Grid View */}
+      <div>
+        <SectionHeader eyebrowKey="section.history.eyebrow" count={filtered.length} />
+
+        {filtered.length === 0 ? (
+          <EmptyState noResults={!!query.trim() && items.length > 0} />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((item) => (
+              <TipCard key={`${item.match.id}-${item.match.dateStr}`} item={item} />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
