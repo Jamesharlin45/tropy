@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai'
 import { streamText, tool } from 'ai'
 import { z } from 'zod'
 
@@ -159,11 +159,35 @@ function cleanStats(raw: any) {
   }
 }
 
+const openrouter = createOpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY || 'sk-or-placeholder',
+})
+
+// Simple in-memory rate limit store for free users (resets on serverless cold starts)
+// Tracks IP -> YYYY-MM-DD
+const rateLimits = new Map<string, string>()
+
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  const { messages, isVip } = await req.json()
+
+  // Rate Limiting Logic
+  if (!isVip) {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown-ip'
+    const today = new Date().toISOString().split('T')[0]
+    const lastUsedDate = rateLimits.get(ip)
+    
+    if (lastUsedDate === today) {
+      return new Response(
+        JSON.stringify({ error: "Daily limit reached. Upgrade to VIP for unlimited AI chat!" }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+    rateLimits.set(ip, today)
+  }
 
   const result = await streamText({
-    model: openai('gpt-4o'),
+    model: openrouter('poolside/laguna-s-2.1'),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 5,

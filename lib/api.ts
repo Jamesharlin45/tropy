@@ -53,12 +53,13 @@ export function fetchMatchStats(matchId: string): Promise<Envelope> {
 export function fetchMatchesWithStats(
   date: string,
   matchIds: string[],
-  opts?: { tz?: string },
+  opts?: { tz?: string; type?: "scheduled" | "finished" },
 ): Promise<Envelope> {
   const params = new URLSearchParams({
     date,
     tz: opts?.tz ?? DEFAULT_TZ,
   })
   if (matchIds.length) params.set("match_ids", matchIds.join(","))
+  if (opts?.type) params.set("type", opts.type)
   return getJson(`/api/matches-with-stats?${params.toString()}`)
 }

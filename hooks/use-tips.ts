@@ -6,11 +6,14 @@ import { buildTipsFromNormalized } from "@/lib/build-tips"
 import { readCache, writeCache, isCacheStale, pruneOldCache } from "@/lib/local-cache"
 import type { MatchTip, NormalizedMatch, NormalizedStats } from "@/lib/types"
 
+import { todayStr } from "@/lib/dates"
+
 // ─── Network fetcher ──────────────────────────────────────────────────────────
 // Calls our Next.js relay (/api/matches-with-stats) which reads from Supabase
 // (falling back to the upstream API if the DB has no rows for that date).
 async function fetchTipsFromNetwork(date: string): Promise<MatchTip[]> {
-  const envelope = await fetchMatchesWithStats(date, [])
+  const isFuture = date >= todayStr()
+  const envelope = await fetchMatchesWithStats(date, [], isFuture ? { type: "scheduled" } : undefined)
   const env = envelope as Record<string, unknown>
 
   // DB path — data is already normalized

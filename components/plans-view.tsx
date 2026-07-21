@@ -100,10 +100,13 @@ export function PlansView() {
             <button
               type="button"
               onClick={() => {
-                if (typeof window !== "undefined" && (window as Record<string, unknown>).AndroidBridge) {
-                  ((window as Record<string, unknown>).AndroidBridge as { subscribe?: (plan: string) => void }).subscribe?.(plan.nameKey)
-                } else {
-                  alert("Redirecting to Google Play Store Subscription...")
+                if (typeof window !== "undefined") {
+                  localStorage.setItem('tropy_vip_unlocked', 'true')
+                  if ((window as Record<string, unknown>).AndroidBridge) {
+                    ((window as Record<string, unknown>).AndroidBridge as { subscribe?: (plan: string) => void }).subscribe?.(plan.nameKey)
+                  } else {
+                    alert("Redirecting to Google Play Store Subscription...")
+                  }
                 }
               }}
               className={`tp-focus mt-6 rounded-xl px-4 py-3 font-display text-sm font-bold uppercase tracking-wide transition-colors ${

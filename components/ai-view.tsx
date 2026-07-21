@@ -4,12 +4,19 @@ import { useChat } from "ai/react"
 import { Send, Bot, User, Loader2 } from "lucide-react"
 import Markdown from "react-markdown"
 import { useApp } from "./app-provider"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 export function AiView() {
   const { t } = useApp()
-  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
-    api: '/api/chat'
+  const [isVip, setIsVip] = useState(false)
+  
+  useEffect(() => {
+    setIsVip(localStorage.getItem('tropy_vip_unlocked') === 'true')
+  }, [])
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading, append, error } = useChat({
+    api: '/api/chat',
+    body: { isVip }
   })
   
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -106,6 +113,13 @@ export function AiView() {
               ))}
             </div>
           )}
+          
+          {error && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+              {error.message || "An error occurred."}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex gap-2 relative">
             <input
               value={input}

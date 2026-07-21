@@ -50,7 +50,8 @@ function getPredictionPicks(raw: Record<string, unknown>): Pick[] {
   picks.sort((a, b) => b.pct - a.pct)
   if (picks.length > 0) picks[0].isRecommended = true
 
-  return picks.slice(0, 6) // top 6 picks max
+  // Only return picks with 60%+ confidence
+  return picks.filter(p => p.pct >= 60).slice(0, 6) // top 6 picks max
 }
 
 function ConfidenceBar({ pct, recommended }: { pct: number; recommended?: boolean }) {
