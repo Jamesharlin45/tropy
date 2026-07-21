@@ -1,5 +1,6 @@
 "use client"
 
+import { BarChart2 } from "lucide-react"
 import { useApp } from "./app-provider"
 
 // Fallback view when normalization can't recognize the shape. Shows the raw
@@ -13,13 +14,16 @@ export function RawData({ data }: { data: unknown }) {
     text = String(data)
   }
   return (
-    <details className="mt-2 rounded-xl border border-[var(--tp-border)] bg-[var(--tp-bg-2)] p-3">
-      <summary className="tp-focus cursor-pointer text-xs font-medium text-[var(--tp-muted)] hover:text-[var(--tp-accent)] transition-colors select-none">
-        📊 {t("card.rawData")}
+    <details className="mt-3 group rounded-xl border border-[var(--tp-border)] bg-[var(--tp-surface-2)]/50 p-3 hover:border-[var(--tp-accent)]/40 transition-colors">
+      <summary className="tp-focus flex cursor-pointer items-center gap-2 text-xs font-semibold text-[var(--tp-muted)] hover:text-[var(--tp-text)] transition-colors">
+        <BarChart2 className="size-4" />
+        {t("card.rawData")}
       </summary>
-      <pre className="mt-3 max-h-96 overflow-auto rounded-lg bg-[var(--tp-bg)] p-3 font-mono text-[10px] leading-relaxed text-[var(--tp-muted)] border border-[var(--tp-border)]">
-        {text}
-      </pre>
+      <div className="mt-3 overflow-hidden rounded-lg border border-[var(--tp-border)] bg-[#0B0F1A] p-3 shadow-inner">
+        <pre className="max-h-80 overflow-auto font-mono text-[11px] leading-relaxed text-slate-300 scrollbar-thin scrollbar-thumb-[var(--tp-border)]">
+          {text}
+        </pre>
+      </div>
     </details>
   )
 }

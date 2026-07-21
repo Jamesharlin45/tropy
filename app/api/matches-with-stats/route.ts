@@ -38,6 +38,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const date = searchParams.get("date") ?? undefined
   const tz = searchParams.get("tz") ?? "EAT" // Default to EAT as requested
+  const type = searchParams.get("type") ?? undefined // 'scheduled' | 'finished'
 
   if (!date) {
     return NextResponse.json(
@@ -116,7 +117,25 @@ export async function GET(request: Request) {
     const home = m.home_name || m.homeName || m.team_a_name
     const away = m.away_name || m.awayName || m.team_b_name
     const time = m.date_unix || m.kickoff_unix || m.time || m.status
-    return id && home && away && time
+    if (!id || !home || !away || !time) return false
+
+    // Filter by scheduled vs finished if requested
+    if (type) {
+      const status = (m.status || "").toLowerCase()
+      if (type === "scheduled") {
+        // Must be a future/unplayed game
+        if (["complete", "finished", "full_time", "suspended", "canceled", "postponed"].includes(status)) {
+          return false
+        }
+      } else if (type === "finished") {
+        // Must be a completed game
+        if (!["complete", "finished", "full_time"].includes(status)) {
+          return false
+        }
+      }
+    }
+
+    return true
   })
 
   // Rank matches
